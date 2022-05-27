@@ -1,6 +1,5 @@
-% 12/20/2021 Yan Liu
+% 05/27/2022 Yan Liu
 % Calculate the hybrid EWM encouragement rule
-% Also calculate the hybrid EWM treatment rule by Sasaki and Ura (2020)
 
 % Data input and preparation
 clear all
@@ -9,7 +8,6 @@ load propensity_coefs.mat
 
 data = IFLS2000_main_trim;
 n = size(data,1);
-
 Y = data.lwages;
 D = data.upsec;
 Z1 = data.exp/1000;
@@ -31,22 +29,33 @@ Z21 = Z2.*p;
 Z20 = Z2.*(1-p);
 
 % Parametric estimation of MTE
-W = [X0 Z20 X1 Z21 p.^2];
+p2 = p.^2-p; % Second-order polynomial in propensity score
+W = [X0 Z20 X1 Z21 p2];
 theta = (W'*W)\(W'*Y);
 beta0 = theta(1:23);
 beta1 = theta(24:46);
 alpha2 = theta(47);
 
 % Calculate propensity scores after manipulation
-M = (Z1-2.5).*(Z1>=2.5);
-XM = X(:,2:end).*M;
-MZ2 = M.*Z2;
-ZM = [M XM Z2 XZ2 MZ2];
-p_M = predictp(X,ZM,gamma);
+% Case 1: alpha=2.5 (median tuition fee)
+M1 = (Z1-2.5).*(Z1>=2.5);
+XM1 = X(:,2:end).*M1;
+M1Z2 = M1.*Z2;
+ZM1 = [M1 XM1 Z2 XZ2 M1Z2];
+p_M1 = predictp(X,ZM1,gamma);
+p2_M1 = p_M1.^2-p_M1;
+
+% Case 2: alpha=22.25 (maximum tuition fee)
+M2 = (Z1-22.25).*(Z1>=22.25);
+XM2 = X(:,2:end).*M2;
+M2Z2 = M2.*Z2;
+ZM2 = [M2 XM2 Z2 XZ2 M2Z2];
+p_M2 = predictp(X,ZM2,gamma);
+p2_M2 = p_M2.^2-p_M2;
 
 % Calculte operator kernel in social welfare criterion
-g_M = [X Z2]*(beta1-beta0).*(p_M-p)+alpha2*(p_M.^2-p.^2);
-g = [X Z2]*(beta1-beta0)+alpha2;
+g_M1 = [X Z2]*(beta1-beta0).*(p_M1-p)+(p2_M1-p2)*alpha2;
+g_M2 = [X Z2]*(beta1-beta0).*(p_M2-p)+(p2_M2-p2)*alpha2;
 
 % Setup CPLEX optimization options
 opt = cplexoptimset('cplex');
@@ -60,7 +69,7 @@ opt.mip.strategy.lbheur = 1;
 opt.mip.limits.cutpasses = -1;
 opt.display = 'off';
 
-% create regressor matrix X from the data
+% create regressor matrix V from the data
 V  = [Z1 Z2];
 
 % Rescale covariates to [-1,1]
@@ -69,27 +78,27 @@ V = [ones(n,1) V./Vscale];
 k = size(V,2);
 
 [V, Ind] = sortrows(V);
-g_M = g_M(Ind);
-g = g(Ind);
+g_M1 = g_M1(Ind);
+g_M2 = g_M2(Ind);
 Vu = unique(V,'rows');
 nu  = size(Vu,1); % number of unique covariate vectors
-gu_M = zeros(nu,1);
-gu = zeros(nu,1);
+gu_M1 = zeros(nu,1);
+gu_M2 = zeros(nu,1);
 jj = 1;
 for j = 1:n
     if ~(sum(V(j,:)~=Vu(jj,:)))
-        gu_M(jj) = gu_M(jj) + g_M(j);
-        gu(jj) = gu(jj) + g(j);
+        gu_M1(jj) = gu_M1(jj) + g_M1(j);
+        gu_M2(jj) = gu_M2(jj) + g_M2(j);
     else
         jj = jj+1;
-        gu_M(jj) = gu_M(jj) + g_M(j);
-        gu(jj) = gu(jj) + g(j);
+        gu_M1(jj) = gu_M1(jj) + g_M1(j);
+        gu_M2(jj) = gu_M2(jj) + g_M2(j);
     end
 end
 
 % add explicit monotonicity constraints
-% Xu is ordered by increasing fees per continuing student (Xu(:,2))
-% and then by increasing distance to school (Xu(:,3))
+% Vu is ordered by increasing fees per continuing student (Vu(:,2))
+% and then by increasing distance to school (Vu(:,3))
 % For each number of children we impose treatment set inclusion
 samefee = (Vu(1:end-1,2)==Vu(2:end,2));
 % decreasing in distance to school
@@ -97,10 +106,10 @@ Mineq_d = [diag(samefee) zeros(nu-1,1)] + [zeros(nu-1,1) diag(-samefee)];
 % increasing in distance to school
 Mineq_i = [diag(-samefee) zeros(nu-1,1)] + [zeros(nu-1,1) diag(samefee)];
 
-f_M = [zeros(k,1); -gu_M]; % objective function coefficients
-f = [zeros(k,1); -gu];
+f_M1 = [zeros(k,1); -gu_M1]; % objective function coefficients for case 1
+f_M2 = [zeros(k,1); -gu_M2]; % objective function coefficients for case 2
 B = 1; % bounds on coefficients
-C = B*sum(abs(Vu),2); % maximum values of x'beta
+C = B*sum(abs(Vu),2); % maximum values of v'beta
 minmargin = max(1,C)*(1e-8); % prevent non-integer numbers the integrality constraint of integers from being counted as integers
 Aineq_d = [[-Vu diag(C)]; [Vu -diag(C)]; [zeros(nu-1,k) Mineq_d]];
 Aineq_i = [[-Vu diag(C)]; [Vu -diag(C)]; [zeros(nu-1,k) Mineq_i]];
@@ -112,40 +121,40 @@ ub = [ B*ones(k,1);  ones(nu,1)];
 ctype = strcat(repmat('C',1,k),repmat('B',1,nu));
 
 % Welfare maximization with treatment decreasing in distance to school
-[sol_pd, v_pd] = cplexmilp(f_M,Aineq_d,bineq,[],[],[],[],[],lb,ub,ctype,[],opt);
+[sol_pd, v_pd] = cplexmilp(f_M1,Aineq_d,bineq,[],[],[],[],[],lb,ub,ctype,[],opt);
 %                      with treatment increasing in distance to school
-[sol_pi, v_pi] = cplexmilp(f_M,Aineq_i,bineq,[],[],[],[],[],lb,ub,ctype,[],opt);
+[sol_pi, v_pi] = cplexmilp(f_M1,Aineq_i,bineq,[],[],[],[],[],lb,ub,ctype,[],opt);
     
 if (v_pd < v_pi)
-    lambda_M = sol_pd(1:k,:);
-    v_M    = -v_pd;
+    lambda_M1 = sol_pd(1:k,:);
+    v_M1    = -v_pd;
 else
-    lambda_M = sol_pi(1:k,:);
-    v_M    = -v_pi;
+    lambda_M1 = sol_pi(1:k,:);
+    v_M1    = -v_pi;
 end
 
-in_Ghat_M = (V*lambda_M>0);
-fprintf('Proportion treated:\n%.4f\n',mean(in_Ghat_M));
-fprintf('Est. welfare gain:\n%.4f\n',mean(g_M.*in_Ghat_M));
-fprintf('Est. welfare gain (treat everyone):\n%.4f\n',mean(g_M));
+in_Ghat_M1 = (V*lambda_M1>0);
+fprintf('Proportion treated:\n%.4f\n',mean(in_Ghat_M1));
+fprintf('Est. welfare gain:\n%.4f\n',mean(g_M1.*in_Ghat_M1));
+fprintf('Est. welfare gain (treat everyone):\n%.4f\n',mean(g_M1));
 
-% Welfare maximization with treatment decreasing in distance to school
-[sol_pd, v_pd] = cplexmilp(f,Aineq_d,bineq,[],[],[],[],[],lb,ub,ctype,[],opt);
-%                      with treatment increasing in distance to school
-[sol_pi, v_pi] = cplexmilp(f,Aineq_i,bineq,[],[],[],[],[],lb,ub,ctype,[],opt);
+% Welfare maximization with encouragement decreasing in distance to school
+[sol_pd, v_pd] = cplexmilp(f_M2,Aineq_d,bineq,[],[],[],[],[],lb,ub,ctype,[],opt);
+%                      with encouragement increasing in distance to school
+[sol_pi, v_pi] = cplexmilp(f_M2,Aineq_i,bineq,[],[],[],[],[],lb,ub,ctype,[],opt);
     
 if (v_pd < v_pi)
-    lambda = sol_pd(1:k,:);
-    v    = -v_pd;
+    lambda_M2 = sol_pd(1:k,:);
+    v_M2    = -v_pd;
 else
-    lambda = sol_pi(1:k,:);
-    v    = -v_pi;
+    lambda_M2 = sol_pi(1:k,:);
+    v_M2    = -v_pi;
 end
 
-in_Ghat = (V*lambda>0);
-fprintf('Proportion treated:\n%.4f\n',mean(in_Ghat));
-fprintf('Est. welfare gain:\n%.4f\n',mean(g.*in_Ghat));
-fprintf('Est. welfare gain (treat everyone):\n%.4f\n',mean(g));
+in_Ghat_M2 = (V*lambda_M2>0);
+fprintf('Proportion treated:\n%.4f\n',mean(in_Ghat_M2));
+fprintf('Est. welfare gain:\n%.4f\n',mean(g_M2.*in_Ghat_M2));
+fprintf('Est. welfare gain (treat everyone):\n%.4f\n',mean(g_M2));
 
 patch1_edge  = [0.6 0.4 0.1];
 patch1_color = [0.93 0.79 0.57];
@@ -157,49 +166,49 @@ Face2Alpha2    = 0.3;
 h = figure('Color','white');
 
 % Calculate the cutoff of fees at different levels of distance to school
-% for encouragement rules
+% for case 1
 line_dist_sec = [min(Z2)-0.5:0.01:max(Z2)+0.5]';
-line_exp_M = Vscale(1,1)*(-(lambda_M(1) + line_dist_sec*lambda_M(3)./Vscale(1,2))./lambda_M(2));
+line_exp_M1 = Vscale(1,1)*(-(lambda_M1(1) + line_dist_sec*lambda_M1(3)./Vscale(1,2))./lambda_M1(2));
 
-if (lambda_M(2)>0) % treatment rule is increasing in fees
-    select_M = (line_exp_M <= 25);
-    patchM_X = [line_dist_sec(select_M); flipud(line_dist_sec(select_M))];
-    patchM_Y = [max(line_exp_M(select_M),0); 25*ones(length(line_exp_M(select_M)),1)];
-else               % treatment rule is decreasing in fees   
-    select_M = (line_exp_M >= 0);
-    patchM_X = [line_dist_sec(select_M); flipud(line_dist_sec(select_M))];
-    patchM_Y = [min(line_exp_M(select_M),25); zeros(length(line_exp_M(select_M)),1)];
+if (lambda_M1(2)>0) % encouragement rule is increasing in fees
+    select_M1 = (line_exp_M1 <= 25);
+    patchM1_X = [line_dist_sec(select_M1); flipud(line_dist_sec(select_M1))];
+    patchM1_Y = [max(line_exp_M1(select_M1),0); 25*ones(length(line_exp_M1(select_M1)),1)];
+else               % encouragement rule is decreasing in fees   
+    select_M1 = (line_exp_M1 >= 0);
+    patchM1_X = [line_dist_sec(select_M1); flipud(line_dist_sec(select_M1))];
+    patchM1_Y = [min(line_exp_M1(select_M1),25); zeros(length(line_exp_M1(select_M1)),1)];
 end
-patch(patchM_X,patchM_Y,patch1_color,'LineStyle','-','FaceAlpha',Face2Alpha1,'EdgeColor',patch1_edge);
+patch(patchM1_X,patchM1_Y,patch2_color,'LineStyle','-','FaceAlpha',Face2Alpha2,'EdgeColor',patch2_edge);
 hold on
 
 % Calculate the cutoff of fees at different levels of distance to school
-% for treatment rules
-line_exp = Vscale(1,1)*(-(lambda(1) + line_dist_sec*lambda(3)./Vscale(1,2))./lambda(2));
+% for case 2
+line_exp_M2 = Vscale(1,1)*(-(lambda_M2(1) + line_dist_sec*lambda_M2(3)./Vscale(1,2))./lambda_M2(2));
 
-if (lambda(2)>0) % treatment rule is increasing in fees
-    select = (line_exp <= 25);
-    patch_X = [line_dist_sec(select); flipud(line_dist_sec(select))];
-    patch_Y = [max(line_exp(select),0); 25*ones(length(line_exp(select)),1)];
-else             % treatment rule is decreasing in fees            
-    select = (line_exp >= 0);
-    patch_X = [line_dist_sec(select); flipud(line_dist_sec(select))];
-    patch_Y = [min(line_exp(select),25); zeros(length(line_exp(select)),1)];
+if (lambda_M2(2)>0) % encouragement rule is increasing in fees
+    select_M2 = (line_exp_M2 <= 25);
+    patchM2_X = [line_dist_sec(select_M2); flipud(line_dist_sec(select_M2))];
+    patchM2_Y = [max(line_exp_M2(select_M2),0); 25*ones(length(line_exp_M2(select_M2)),1)];
+else               % encouragement rule is decreasing in fees   
+    select_M2 = (line_exp_M2 >= 0);
+    patchM2_X = [line_dist_sec(select_M2); flipud(line_dist_sec(select_M2))];
+    patchM2_Y = [min(line_exp_M2(select_M2),25); zeros(length(line_exp_M2(select_M2)),1)];
 end
-patch(patch_X,patch_Y,patch2_color,'LineStyle','-','FaceAlpha',Face2Alpha2,'EdgeColor',patch2_edge);
+patch(patchM2_X,patchM2_Y,patch1_color,'LineStyle','-','FaceAlpha',Face2Alpha1,'EdgeColor',patch1_edge);
 hold on
 
-% Prepare the density plot of the covariates
-Xr = [Z1 Z2];
-[Xr, Ind] = sortrows(Xr);
-Xu = unique(Xr,'rows');
-exp_u = Xu(:,1);
-dist_sec_u = Xu(:,2);
-nu = size(Xu,1);
+% Prepare the density plot of instruments
+Zr = [Z1 Z2];
+[Zr, Ind] = sortrows(Zr);
+Zu = unique(Zr,'rows');
+exp_u = Zu(:,1);
+dist_sec_u = Zu(:,2);
+nu = size(Zu,1);
 nw = zeros(nu,1);
 jj = 1;
 for j = 1:n
-    if ~(sum(Xr(j,:)~=Xu(jj,:)))
+    if ~(sum(Zr(j,:)~=Zu(jj,:)))
         nw(jj) = nw(jj) + 1;
     else
         jj = jj+1;
@@ -207,15 +216,15 @@ for j = 1:n
     end
 end
 
-% overlay the density plot of the covariates
+% Overlay the density plot of instruments
 scatter(dist_sec_u,exp_u,nw,'MarkerEdgeColor','none','MarkerFaceColor','black');
 
-% plot labeling
+% Plot labeling
 axis([min(Z2)-0.5 max(Z2)+0.5 0 25]);
 xlabel('Distance to School (in km)');
 ylabel('Fees per Continuing Student (in 1000 Rupiah)');
 ax = gca;
 ax.YTick = [0,5,10,15,20,25];
 ax.YTickLabel = {'0','5','10','15','20','25'};
-legend('Encouragement Rule','Treatment Rule','Population Density','Location','northeast');
+legend('2500 Rupiah subsidy','22250 Rupiah subsidy','Population Density','Location','northeast');
 saveas(h,'EWMrule_IFLS.png');
