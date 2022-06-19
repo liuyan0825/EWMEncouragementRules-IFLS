@@ -227,4 +227,4 @@ ax = gca;
 ax.YTick = [0,5,10,15,20,25];
 ax.YTickLabel = {'0','5','10','15','20','25'};
 legend('2500 Rupiah subsidy','22250 Rupiah subsidy','Population Density','Location','northeast');
-saveas(h,'EWMrule_IFLS.png');
+saveas(h,'EWMrule_IFLS','epsc');

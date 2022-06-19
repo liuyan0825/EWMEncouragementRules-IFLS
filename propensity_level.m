@@ -65,4 +65,4 @@ ylabel('Fees per Continuing Student (in 1000 Rupiah)');
 
 % Overlay the density plot of the covariates
 scatter(dist_sec_u,exp_u,nw,'MarkerEdgeColor','none','MarkerFaceColor','black');
-saveas(h,'propensity_level.png');
+saveas(h,'propensity_level','epsc');

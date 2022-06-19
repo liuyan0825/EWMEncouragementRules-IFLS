@@ -49,4 +49,4 @@ contour(Z2all,U-pbar,intMTE,'ShowText','on')
 title('Panel B: Level Sets of Outcome Changes');
 xlabel('Distance to School (in km)');
 ylabel('Change in Propensity Score');
-saveas(h,'MTE_level.png');
+saveas(h,'MTE_level','epsc');
