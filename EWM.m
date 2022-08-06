@@ -1,5 +1,6 @@
-% 05/27/2022 Yan Liu
-% Calculate the hybrid EWM encouragement rule
+% 08/06/2022 Yan Liu
+% Calculate the feasible EWM encouragement rule
+% Replicate Table 1 and Figure 1
 
 % Data input and preparation
 clear all
@@ -57,6 +58,26 @@ p2_M2 = p_M2.^2-p_M2;
 g_M1 = [X Z2]*(beta1-beta0).*(p_M1-p)+(p2_M1-p2)*alpha2;
 g_M2 = [X Z2]*(beta1-beta0).*(p_M2-p)+(p2_M2-p2)*alpha2;
 
+% Specify color and transparency for patches
+color = true;
+if (color)
+    patch1_edge  = [0.6 0.4 0.1];
+    patch1_color = [0.93 0.79 0.57];
+    patch2_edge  = [0.3 0.4 0.3];
+    patch2_color = [0.6 0.7 0.6];
+    Face2Alpha1    = 0.7;
+    Face2Alpha2    = 0.3;
+    savefilename ='EWMrule_IFLS_color';
+else
+    patch1_edge  = [0.2 0.2 0.2];
+    patch1_color = [0.5 0.5 0.5];
+    patch2_edge  = [0.5 0.5 0.5];
+    patch2_color = [0.8 0.8 0.8];
+    Face2Alpha1    = 0.7;
+    Face2Alpha2    = 0.3;
+    savefilename = 'EWMrule_IFLS';
+end
+
 % Setup CPLEX optimization options
 opt = cplexoptimset('cplex');
 opt.parallel = 1;
@@ -110,7 +131,8 @@ f_M1 = [zeros(k,1); -gu_M1]; % objective function coefficients for case 1
 f_M2 = [zeros(k,1); -gu_M2]; % objective function coefficients for case 2
 B = 1; % bounds on coefficients
 C = B*sum(abs(Vu),2); % maximum values of v'beta
-minmargin = max(1,C)*(1e-8); % prevent non-integer numbers the integrality constraint of integers from being counted as integers
+minmargin = max(1,C)*(1e-8); % prevent non-integer numbers the integrality 
+% constraint of integers from being counted as integers
 Aineq_d = [[-Vu diag(C)]; [Vu -diag(C)]; [zeros(nu-1,k) Mineq_d]];
 Aineq_i = [[-Vu diag(C)]; [Vu -diag(C)]; [zeros(nu-1,k) Mineq_i]];
 bineq = [[C-minmargin];[-minmargin];minmargin(1:nu-1,:)];
@@ -133,10 +155,15 @@ else
     v_M1    = -v_pi;
 end
 
+% Calculate Panel A of Table 1
 in_Ghat_M1 = (V*lambda_M1>0);
-fprintf('Proportion treated:\n%.4f\n',mean(in_Ghat_M1));
-fprintf('Est. welfare gain:\n%.4f\n',mean(g_M1.*in_Ghat_M1));
-fprintf('Est. welfare gain (treat everyone):\n%.4f\n',mean(g_M1));
+fprintf('Share of Eligible Population (FEWM):\n%.4f\n',mean(in_Ghat_M1));
+fprintf('Est. Welfare Gain (FEWM):\n%.4f\n',mean(g_M1.*in_Ghat_M1));
+fprintf('Avg. Change in Treatment Take-up (FEWM):\n%.4f\n',mean((p_M1(Ind)-p(Ind)).*in_Ghat_M1));
+fprintf('PRTE (FEWM):\n%.4f\n',mean(g_M1.*in_Ghat_M1)/mean((p_M1(Ind)-p(Ind)).*in_Ghat_M1));
+fprintf('Est. Welfare Gain (encourage everyone):\n%.4f\n',mean(g_M1));
+fprintf('Avg. Change in Treatment Take-up (encourage everyone):\n%.4f\n',mean(p_M1-p));
+fprintf('PRTE (encourage everyone):\n%.4f\n',mean(g_M1)/mean(p_M1-p));
 
 % Welfare maximization with encouragement decreasing in distance to school
 [sol_pd, v_pd] = cplexmilp(f_M2,Aineq_d,bineq,[],[],[],[],[],lb,ub,ctype,[],opt);
@@ -151,17 +178,15 @@ else
     v_M2    = -v_pi;
 end
 
+% Calculate Panel B of Table 1
 in_Ghat_M2 = (V*lambda_M2>0);
-fprintf('Proportion treated:\n%.4f\n',mean(in_Ghat_M2));
-fprintf('Est. welfare gain:\n%.4f\n',mean(g_M2.*in_Ghat_M2));
-fprintf('Est. welfare gain (treat everyone):\n%.4f\n',mean(g_M2));
-
-patch1_edge  = [0.6 0.4 0.1];
-patch1_color = [0.93 0.79 0.57];
-patch2_edge  = [0.3 0.4 0.3];
-patch2_color = [0.6 0.7 0.6];
-Face2Alpha1    = 0.7;
-Face2Alpha2    = 0.3;
+fprintf('Share of Eligible Population (FEWM):\n%.4f\n',mean(in_Ghat_M2));
+fprintf('Est. Welfare Gain (FEWM):\n%.4f\n',mean(g_M2.*in_Ghat_M2));
+fprintf('Avg. Change in Treatment Take-up (FEWM):\n%.4f\n',mean((p_M2(Ind)-p(Ind)).*in_Ghat_M2));
+fprintf('PRTE (FEWM):\n%.4f\n',mean(g_M2.*in_Ghat_M2)/mean((p_M2(Ind)-p(Ind)).*in_Ghat_M2));
+fprintf('Est. Welfare Gain (encourage everyone):\n%.4f\n',mean(g_M2));
+fprintf('Avg. Change in Treatment Take-up (encourage everyone):\n%.4f\n',mean(p_M2-p));
+fprintf('PRTE (encourage everyone):\n%.4f\n',mean(g_M2)/mean(p_M2-p));
 
 h = figure('Color','white');
 
@@ -227,4 +252,4 @@ ax = gca;
 ax.YTick = [0,5,10,15,20,25];
 ax.YTickLabel = {'0','5','10','15','20','25'};
 legend('2500 Rupiah subsidy','22250 Rupiah subsidy','Population Density','Location','northeast');
-saveas(h,'EWMrule_IFLS','epsc');
+saveas(h,savefilename,'epsc');

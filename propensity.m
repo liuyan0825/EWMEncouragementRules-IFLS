@@ -3,9 +3,7 @@
 
 % Data input and preparation
 clear all
-load IFLS2000_main.mat
-
-data = IFLS2000main;
+data = readtable('IFLS2000_main.csv');
 n = size(data,1);
 Y = data.lwages;
 D = data.upsec;
