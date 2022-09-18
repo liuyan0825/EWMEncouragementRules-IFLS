@@ -55,3 +55,7 @@ This code calculates the feasible EWM encouragement rule for two tuition subsidy
 **MATLAB Code: decomposition.m**
 
 This code plots the level sets of changes in average treatment take-up and changes in average treatment effects for those induced to switch treatment status conditional on (X,Z) evaluated at the mean value of X when going from the status quo to a full tuition waiver (Figure 2).
+
+**MATLAB Code: specification.m**
+
+This code compares the polynomial and local quadratic specifications for the MTE.
