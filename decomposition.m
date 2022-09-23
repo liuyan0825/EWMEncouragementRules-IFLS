@@ -32,7 +32,7 @@ z1all = linspace(min(Z1),max(Z1),100);
 z2all = linspace(min(Z2),max(Z2),100);
 [Z1all,Z2all] = meshgrid(z1all,z2all);
 
-% Calculate changes in estimated propensity scores evaluated at mean values of X
+% Calculate changes in estimated propensity scores evaluated at mean value of X
 dX = size(X,2);
 gamma0 = gamma(1);
 gammaX = gamma(2:dX+1);
@@ -78,7 +78,7 @@ betaX = theta(24:45)-theta(1:22);
 betaZ2 = theta(46)-theta(23);
 alpha = theta(47);
 
-% Calculate integral of estimated MTE evaluated at mean values of X
+% Calculate integral of estimated MTE evaluated at mean value of X
 PRTE = ([1 Xbar]*betaX*(pM-p0)+Z2all*betaZ2.*(pM-p0)+(pM.^2-pM-(p0.^2-p0))*alpha)./(pM-p0);
 
 h = figure('Color','white');

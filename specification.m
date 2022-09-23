@@ -43,8 +43,21 @@ alpha3 = theta3(47:48);
 % 4-th order polynomial
 W4 = [X0 Z20 X1 Z21 p.^2-p p.^3-p p.^4-p];
 theta4 = (W4'*W4)\(W4'*Y);
-beta4 = theta4(24:46)-theta3(1:23);
+beta4 = theta4(24:46)-theta4(1:23);
 alpha4 = theta4(47:49);
+
+% 5-th order polynomial
+W5 = [X0 Z20 X1 Z21 p.^2-p p.^3-p p.^4-p p.^5-p];
+theta5 = (W5'*W5)\(W5'*Y);
+beta5 = theta5(24:46)-theta5(1:23);
+alpha5 = theta5(47:50);
+
+% 10-th order polynomial
+W10 = [X0 Z20 X1 Z21 p.^2-p p.^3-p p.^4-p p.^5-p...
+    p.^6-p p.^7-p p.^8-p p.^9-p p.^10-p];
+theta10 = (W10'*W10)\(W10'*Y);
+beta10 = theta10(24:46)-theta10(1:23);
+alpha10 = theta10(47:55);
 
 % Local quadratic regression following Heckman, Urzua, and Vytlacil (2006)
 h = 0.27; %bandwidth
@@ -99,7 +112,7 @@ for i = 1:100
    lqr(i) = theta(2);
 end
 
-% Calculate estimated MTE evaluated at mean values of X and Z2
+% Calculate estimated MTE evaluated at mean value of X and Z2
 Xbar = mean(X).*ones(100,1);
 Z2bar = mean(Z2)*ones(100,1);
 u2 = 2*u-1;
@@ -108,6 +121,10 @@ u3 = [2*u 3*u.^2]-1;
 MTE3 = [ones(100,1) Xbar Z2bar]*beta3+u3*alpha3;
 u4 = [2*u 3*u.^2 4*u.^3]-1;
 MTE4 = [ones(100,1) Xbar Z2bar]*beta4+u4*alpha4;
+u5 = [2*u 3*u.^2 4*u.^3 5*u.^4]-1;
+MTE5 = [ones(100,1) Xbar Z2bar]*beta5+u5*alpha5;
+u10 = [2*u 3*u.^2 4*u.^3 5*u.^4 6*u.^5 7*u.^6 8*u.^7 9*u.^8 10*u.^9]-1;
+MTE10 = [ones(100,1) Xbar Z2bar]*beta10+u10*alpha10;
 beta = betae(23:44)-betae(1:22);
 MTElqr = [Xbar Z2bar]*beta+lqr;
 
@@ -116,8 +133,11 @@ plot(u,MTE2,'-','LineWidth',1.8)
 hold on
 plot(u,MTE3,'--','LineWidth',1.8)
 plot(u,MTE4,':','LineWidth',1.8)
+plot(u,MTE5,'--o','LineWidth',1.8)
+plot(u,MTE10,'--+','LineWidth',1.8)
 plot(u,MTElqr,'-.','LineWidth',1.8)
-legend('2-th order','3-th order','4-th order','local quadratic','Location','northeast')
+legend('2-th order','3-th order','4-th order','5-th order','10-th order',...
+    'local quadratic','Location','northeast')
 xlabel('$u_1$','interpreter','latex');
 ylabel('$\widehat{MTE}_1(u_1,X,Z_2)$','interpreter','latex');
 saveas(h,'MTEspecification','epsc');
