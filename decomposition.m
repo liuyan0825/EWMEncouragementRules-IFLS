@@ -88,7 +88,7 @@ subplot(1,2,1)
 [C1,h1] = contour(Z2all,Z1all,pM-p0,'ShowText','on','LineWidth',1);
 clabel(C1,h1,'FontSize',6)
 hold on
-title('Panel A: Changes in Average Treatment Take-up')
+title('Panel A')
 xlabel('Distance to School (in km)');
 ylabel('Fees per Continuing Student (in 1000 Rupiah)')
 set(gca,'FontSize',6)
@@ -103,7 +103,7 @@ subplot(1,2,2)
 [C2,h2] = contour(Z2all,Z1all,PRTE,'ShowText','on','LineWidth',1);
 clabel(C2,h2,'FontSize',6)
 hold on
-title('Panel B: Changes in Average Treatment Effects')
+title('Panel B')
 xlabel('Distance to School (in km)')
 ylabel('Fees per Continuing Student (in 1000 Rupiah)')
 set(gca,'FontSize',6)
