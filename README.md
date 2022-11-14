@@ -50,7 +50,7 @@ This code estimates the propensity score p(X,Z) and trims observations for p(X,Z
 
 **MATLAB Code: EWM.m**
 
-This code calculates the feasible EWM encouragement rule for two tuition subsidy levels (median and maximum tuition fee) and replicate Figure 1 and Table 1. The optimization problem is solved with [IBM ILOG CPLEX Optimization Studio](https://www.ibm.com/products/ilog-cplex-optimization-studio). Part of the codes are adapted from [replication files](https://www.econometricsociety.org/sites/default/files/13288_Data_and_Programs.zip) for [Kitagawa and Tetenov (2018)](https://onlinelibrary.wiley.com/doi/abs/10.3982/ECTA13288).
+This code calculates the feasible EWM encouragement rule and the budget-constrained EWM encouragement rule for two tuition subsidy levels (median and maximum tuition fee) and replicate Figure 1 and Table 1. The optimization problem is solved with [IBM ILOG CPLEX Optimization Studio](https://www.ibm.com/products/ilog-cplex-optimization-studio). Part of the codes are adapted from [replication files](https://www.econometricsociety.org/sites/default/files/13288_Data_and_Programs.zip) for [Kitagawa and Tetenov (2018)](https://onlinelibrary.wiley.com/doi/abs/10.3982/ECTA13288).
 
 **MATLAB Code: decomposition.m**
 
