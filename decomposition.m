@@ -1,7 +1,6 @@
-% 08/06/2022 Yan Liu
-% Plot level sets of changes in average treatment take-up and changes in 
-% average treatment effects for those induced to switch treatment status
-% conditional on (X,Z) evaluated at the mean value of X 
+% 11/14/2022 Yan Liu
+% Plot level sets of changes in average treatment take-up and average treatment 
+% effects for those induced to switch treatment status conditional on (Z1,Z2)
 % when going from the status quo to a full tuition waiver   
 % Replicate Figure 2
 
@@ -32,7 +31,7 @@ z1all = linspace(min(Z1),max(Z1),100);
 z2all = linspace(min(Z2),max(Z2),100);
 [Z1all,Z2all] = meshgrid(z1all,z2all);
 
-% Calculate changes in estimated propensity scores evaluated at mean value of X
+% Calculate changes in average treatment take-up conditional on (Z1,Z2)
 dX = size(X,2);
 gamma0 = gamma(1);
 gammaX = gamma(2:dX+1);
@@ -41,13 +40,34 @@ gammaXZ1 = gamma(dX+3:end-dX-2);
 gammaZ2 = gamma(end-dX-1);
 gammaXZ2 = gamma(end-dX:end-1);
 gammaZ12 = gamma(end);
-Xbar = mean(X);
-tX = gamma0+Xbar*gammaX+gammaZ1*Z1all+Xbar*gammaXZ1*Z1all+gammaZ2*Z2all...
-    +Xbar*gammaXZ2*Z2all+gammaZ12*Z1all.*Z2all;
-p0 = exp(tX)./(1+exp(tX)); % propensity score before manipulation
-tXM = gamma0+Xbar*gammaX+gammaZ1*0+Xbar*gammaXZ1*0+gammaZ2*Z2all...
-    +Xbar*gammaXZ2*Z2all+gammaZ12*0.*Z2all;
-pM = exp(tXM)./(1+exp(tXM)); % propensity score after manipulation (full tuition waiver)
+tX = gamma0+kron(X*gammaX,ones(100))+kron(ones(n,1),gammaZ1*Z1all)...
+    +kron(X*gammaXZ1,Z1all)+kron(ones(n,1),gammaZ2*Z2all)...
+    +kron(X*gammaXZ2,Z2all)+kron(ones(n,1),gammaZ12*Z1all.*Z2all);
+p0 = exp(tX)./(1+exp(tX)); % Propensity score before manipulation
+tXM = gamma0+kron(X*gammaX,ones(100))+kron(ones(n,1),gammaZ1*zeros(100))...
+    +kron(X*gammaXZ1,zeros(100))+kron(ones(n,1),gammaZ2*Z2all)...
+    +kron(X*gammaXZ2,Z2all)+kron(ones(n,1),gammaZ12*zeros(100).*Z2all);
+pM = exp(tXM)./(1+exp(tXM)); % Propensity score after manipulation (full tuition waiver)
+J = kron(ones(1,n),eye(100));
+TT = J*(pM-p0)/n;
+
+% Parametric estimation of MTE
+X1 = [ones(n,1) X].*p;
+X0 = [ones(n,1) X].*(1-p);
+Z21 = Z2.*p;
+Z20 = Z2.*(1-p);
+W = [X0 Z20 X1 Z21 p.^2-p]; % Second-order polynomial in propensity score
+theta = (W'*W)\(W'*Y);
+betaX = theta(24:45)-theta(1:22);
+betaZ2 = theta(46)-theta(23);
+alpha = theta(47);
+
+% Calculate average treatment effects for those induced to switch treatment
+% status conditional on (Z1,Z2)
+numerator = kron([ones(n,1) X]*betaX,ones(100)).*(pM-p0)+...
+      +kron(ones(n,1),Z2all*betaZ2).*(pM-p0)+(pM.^2-pM-(p0.^2-p0))*alpha;
+TE = J*(numerator)/n./TT;
+TE = min(max(TE,quantile(TE,0.025,'all')),quantile(TE,0.975,'all')); %Winsorize at 2.5% level
 
 % Prepare the density plot of the covariates
 Zr = [Z1 Z2];
@@ -67,28 +87,14 @@ for j = 1:n
     end
 end
 
-% Parametric estimation of MTE
-X1 = [ones(n,1) X].*p;
-X0 = [ones(n,1) X].*(1-p);
-Z21 = Z2.*p;
-Z20 = Z2.*(1-p);
-W = [X0 Z20 X1 Z21 p.^2-p]; % Second-order polynomial in propensity score
-theta = (W'*W)\(W'*Y);
-betaX = theta(24:45)-theta(1:22);
-betaZ2 = theta(46)-theta(23);
-alpha = theta(47);
-
-% Calculate integral of estimated MTE evaluated at mean value of X
-PRTE = ([1 Xbar]*betaX*(pM-p0)+Z2all*betaZ2.*(pM-p0)+(pM.^2-pM-(p0.^2-p0))*alpha)./(pM-p0);
-
 h = figure('Color','white');
 set(gcf,'Position',[0 0 585 225]);
 
 subplot(1,2,1)
-[C1,h1] = contour(Z2all,Z1all,pM-p0,'ShowText','on','LineWidth',1);
+[C1,h1] = contour(Z2all,Z1all,TT,'ShowText','on','LineWidth',1);
 clabel(C1,h1,'FontSize',6)
 hold on
-title('Panel A')
+title('Panel A: Changes in Treatment Take-up')
 xlabel('Distance to School (in km)');
 ylabel('Fees per Continuing Student (in 1000 Rupiah)')
 set(gca,'FontSize',6)
@@ -100,10 +106,11 @@ set(gca,'YTickLabel',{'0','5','10','15','20','25'})
 scatter(dist_sec_u,exp_u,nw*0.4,'MarkerEdgeColor','none','MarkerFaceColor','black');
 
 subplot(1,2,2)
-[C2,h2] = contour(Z2all,Z1all,PRTE,'ShowText','on','LineWidth',1);
+[C2,h2] = contour(Z2all,Z1all,TE,'ShowText','on','LineWidth',1);
 clabel(C2,h2,'FontSize',6)
+h2.LevelStep = 1;
 hold on
-title('Panel B')
+title('Panel B: Treatment Effects')
 xlabel('Distance to School (in km)')
 ylabel('Fees per Continuing Student (in 1000 Rupiah)')
 set(gca,'FontSize',6)

@@ -77,7 +77,7 @@ fprintf('PRTE:\n%.4f\n',mean(g_M2)/mean(p_M2-p));
 fprintf('Est. total costs:\n%.4f\n',mean((Z1-M2).*p_M2));
 
 % Specify color and transparency for patches
-color = false;
+color = true;
 if (color)
     patch1_edge  = [0.6 0.4 0.1];
     patch1_color = [0.93 0.79 0.57];
@@ -126,7 +126,7 @@ Aineq = [[-V diag(C)]; [V -diag(C)]];
 bineq = [[C-minmargin];[-minmargin]];
 Aineq_M1 = [[-V diag(C)]; [V -diag(C)]; [zeros(1,k) B_M1']];
 Aineq_M2 = [[-V diag(C)]; [V -diag(C)]; [zeros(1,k) B_M2']];
-bineq_bc = [[C-minmargin];[-minmargin];0.25*n];
+bineq_bc = [[C-minmargin];[-minmargin];0.32*n];
 lb = [-B*ones(k,1); zeros(n,1)];
 ub = [ B*ones(k,1);  ones(n,1)];
 
@@ -155,7 +155,7 @@ fprintf('Proportion treated:\n%.4f\n',mean(in_Ghat_M2));
 fprintf('Est. welfare gain:\n%.4f\n',mean(g_M2.*in_Ghat_M2));
 fprintf('Average Propensity Score Changes:\n%.4f\n',mean((p_M2-p).*in_Ghat_M2));
 fprintf('PRTE:\n%.4f\n',mean(g_M2.*in_Ghat_M2)/mean((p_M2-p).*in_Ghat_M2));
-fprintf('Est. total costs:\n%.4f\n',sum((Z1-M2).*p_M2.*in_Ghat_M2));
+fprintf('Est. total costs:\n%.4f\n',mean((Z1-M2).*p_M2.*in_Ghat_M2));
 
 % Calculate budget-constrained EWM encouragement rule in case 1
 [sol, v] = cplexmilp(f_M1,Aineq_M1,bineq_bc,[],[],[],[],[],lb,ub,ctype,[],opt);
@@ -167,7 +167,7 @@ fprintf('Proportion treated:\n%.4f\n',mean(in_Ghat_M1_bc));
 fprintf('Est. welfare gain:\n%.4f\n',mean(g_M1.*in_Ghat_M1_bc));
 fprintf('Average Propensity Score Changes:\n%.4f\n',mean((p_M1-p).*in_Ghat_M1_bc));
 fprintf('PRTE:\n%.4f\n',mean(g_M1.*in_Ghat_M1_bc)/mean((p_M1-p).*in_Ghat_M1_bc));
-fprintf('Est. total costs:\n%.4f\n',sum((Z1-M1).*p_M1.*in_Ghat_M1_bc));
+fprintf('Est. total costs:\n%.4f\n',mean((Z1-M1).*p_M1.*in_Ghat_M1_bc));
 
 % Calculate budget-constrained EWM encouragement rule in case 2
 [sol, v] = cplexmilp(f_M2,Aineq_M2,bineq_bc,[],[],[],[],[],lb,ub,ctype,[],opt);
@@ -179,7 +179,7 @@ fprintf('Proportion treated:\n%.4f\n',mean(in_Ghat_M2_bc));
 fprintf('Est. welfare gain:\n%.4f\n',mean(g_M2.*in_Ghat_M2_bc));
 fprintf('Average Propensity Score Changes:\n%.4f\n',mean((p_M2-p).*in_Ghat_M2_bc));
 fprintf('PRTE:\n%.4f\n',mean(g_M2.*in_Ghat_M2_bc)/mean((p_M2-p).*in_Ghat_M2_bc));
-fprintf('Est. total costs:\n%.4f\n',sum((Z1-M2).*p_M2.*in_Ghat_M2_bc));
+fprintf('Est. total costs:\n%.4f\n',mean((Z1-M2).*p_M2.*in_Ghat_M2_bc));
 
 % Prepare patch for feasible EWM encouragement rule in case 1
 % (Calculate the cutoff of fees at different levels of distance to school)
