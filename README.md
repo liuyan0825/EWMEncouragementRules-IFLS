@@ -44,6 +44,10 @@ This data comes from [the third wave of the Indonesia Family Life Survey (IFLS3)
 
 This code generates the dataset “IFLS2000_main.csv” from the original data files “b3a_dl1.dta”, “b3a_tk1.dta”, “b3a_tk2.dta”, “b3b_ba0.dta”, “bk_ar1.dta”, “bk_sc.dta”, “sar.dta”, “schl_e.dta”.
 
+**Stata code: samplestat.do**
+
+This code calculates sample averages for the main variables used in the analysis.
+
 **MATLAB Code: propensity.m**
 
 This code estimates the propensity score p(X,Z) and trims observations for p(X,Z) to have common support for treated and untreated. The coefficients from the logistic regression are saved in "propensity_coefs.mat". The trimmed data is saved in "IFLS2000_main_trim.mat".
@@ -54,8 +58,12 @@ This code calculates the feasible EWM encouragement rule and the budget-constrai
 
 **MATLAB Code: decomposition.m**
 
-This code plots the level sets of changes in average treatment take-up and changes in average treatment effects for those induced to switch treatment status conditional on (X,Z) evaluated at the mean value of X when going from the status quo to a full tuition waiver (Figure 2).
+This code plots the level sets of changes in average treatment take-up and average treatment effects for those induced to switch treatment status conditional on (Z1,Z2) when going from the status quo to a full tuition waiver (Figure 2). Function [contourLegend.m](https://www.mathworks.com/matlabcentral/fileexchange/115120-legend-for-contour-plots) is required.
 
 **MATLAB Code: specification.m**
 
 This code compares the polynomial and local quadratic specifications for the MTE.
+
+**MATLAB Code: cv.m**
+
+This code selects the order for the polynomial specification using leave-one-out cross-validation.
