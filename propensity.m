@@ -1,4 +1,4 @@
-% 05/27/2022 Yan Liu
+% 12/12/2022 Yan Liu
 % Estimate the propensity score p(X,Z)
 
 % Data input and preparation
@@ -10,10 +10,12 @@ D = data.upsec;
 Z1 = data.exp/1000;
 Z2 = data.dist_sec;
 Z12 = Z1.*Z2;
-X = [data.dist_health data.ar09 data.ar09.^2 data.une_p data.ele_p data.sec_p ...
-    data.une_m data.ele_m data.sec_m data.rural data.n_sumatra data.w_sumatra ...
-    data.s_sumatra data.lampung data.c_java data.yogyakarta data.e_java ...
-    data.bali data.w_nussa_tengara data.s_kalimanthan data.s_sulawesi];
+X = [data.ar09 data.ar09.^2 data.rural data.dist_health ...
+    data.protestant data.catholic data.religion_other ...
+    data.ele_p data.sec_p data.missing_p data.ele_m data.sec_m data.missing_m...
+    data.n_sumatra data.w_sumatra data.s_sumatra data.lampung ...
+    data.c_java data.yogyakarta data.e_java data.bali ...
+    data.w_nussa_tengara data.s_kalimanthan data.s_sulawesi];
 XZ1 = X.*Z1;
 XZ2 = X.*Z2;
 
@@ -34,4 +36,3 @@ select = (phat>=max(min(p0),min(p1)) & phat<=min(max(p0),max(p1)));
 data.phat = phat;
 IFLS2000_main_trim = data(select,:);
 save('IFLS2000_main_trim.mat','IFLS2000_main_trim')
-[min(IFLS2000_main_trim.phat) max(IFLS2000_main_trim.phat)]

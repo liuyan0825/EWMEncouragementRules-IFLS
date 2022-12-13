@@ -1,4 +1,4 @@
-% 11/14/2022 Yan Liu
+% 12/12/2022 Yan Liu
 % Plot level sets of changes in average treatment take-up and average treatment 
 % effects for those induced to switch treatment status conditional on (Z1,Z2)
 % when going from the status quo to a full tuition waiver   
@@ -16,14 +16,12 @@ Y = data.lwages;
 D = data.upsec;
 Z1 = data.exp/1000;
 Z2 = data.dist_sec;
-Z12 = Z1.*Z2;
-X = [data.dist_health data.ar09 data.ar09.^2 data.une_p data.ele_p data.sec_p ...
-    data.une_m data.ele_m data.sec_m data.rural data.n_sumatra data.w_sumatra ...
-    data.s_sumatra data.lampung data.c_java data.yogyakarta data.e_java ...
-    data.bali data.w_nussa_tengara data.s_kalimanthan data.s_sulawesi];
-XZ1 = X.*Z1;
-XZ2 = X.*Z2;
-Z = [Z1 XZ1 Z2 XZ2 Z12];
+X = [data.ar09 data.ar09.^2 data.rural data.dist_health ...
+    data.protestant data.catholic data.religion_other ...
+    data.ele_p data.sec_p data.missing_p data.ele_m data.sec_m data.missing_m...
+    data.n_sumatra data.w_sumatra data.s_sumatra data.lampung ...
+    data.c_java data.yogyakarta data.e_java data.bali ...
+    data.w_nussa_tengara data.s_kalimanthan data.s_sulawesi];
 p = data.phat;
 
 % Create grids for contour plot
@@ -58,9 +56,9 @@ Z21 = Z2.*p;
 Z20 = Z2.*(1-p);
 W = [X0 Z20 X1 Z21 p.^2-p]; % Second-order polynomial in propensity score
 theta = (W'*W)\(W'*Y);
-betaX = theta(24:45)-theta(1:22);
-betaZ2 = theta(46)-theta(23);
-alpha = theta(47);
+betaX = theta(27:51)-theta(1:25);
+betaZ2 = theta(52)-theta(26);
+alpha = theta(53);
 
 % Calculate average treatment effects for those induced to switch treatment
 % status conditional on (Z1,Z2)
@@ -106,8 +104,7 @@ set(gca,'YTickLabel',{'0','5','10','15','20','25'})
 scatter(dist_sec_u,exp_u,nw*0.4,'MarkerEdgeColor','none','MarkerFaceColor','black');
 
 subplot(1,2,2)
-[C2,h2] = contour(Z2all,Z1all,TE,'ShowText','on','LineWidth',1);
-clabel(C2,h2,'FontSize',6)
+[C2,h2] = contour(Z2all,Z1all,TE,'LineWidth',1);
 h2.LevelStep = 1;
 hold on
 title('Panel B: Treatment Effects')
@@ -120,5 +117,6 @@ set(gca,'YTickLabel',{'0','5','10','15','20','25'})
 
 % Overlay the density plot of the covariates
 scatter(dist_sec_u,exp_u,nw*0.4,'MarkerEdgeColor','none','MarkerFaceColor','black');
+contourLegend(h2)
 
 saveas(h,'decompose','epsc');

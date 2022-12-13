@@ -1,4 +1,4 @@
-% 10/26/2022 Yan Liu
+% 12/12/2022 Yan Liu
 % Calculate the feasible EWM encouragement rule and the budget-constrained 
 % EWM encouragement rule
 % Replicate Figure 1
@@ -15,18 +15,19 @@ D = data.upsec;
 Z1 = data.exp/1000;
 Z2 = data.dist_sec;
 Z12 = Z1.*Z2;
-X = [data.dist_health data.ar09 data.ar09.^2 data.une_p data.ele_p data.sec_p ...
-    data.une_m data.ele_m data.sec_m data.rural data.n_sumatra data.w_sumatra ...
-    data.s_sumatra data.lampung data.c_java data.yogyakarta data.e_java ...
-    data.bali data.w_nussa_tengara data.s_kalimanthan data.s_sulawesi];
+X = [data.ar09 data.ar09.^2 data.rural data.dist_health ...
+    data.protestant data.catholic data.religion_other ...
+    data.ele_p data.sec_p data.missing_p data.ele_m data.sec_m data.missing_m...
+    data.n_sumatra data.w_sumatra data.s_sumatra data.lampung ...
+    data.c_java data.yogyakarta data.e_java data.bali ...
+    data.w_nussa_tengara data.s_kalimanthan data.s_sulawesi];
 XZ1 = X.*Z1;
 XZ2 = X.*Z2;
-X = [ones(n,1) X];
 Z = [Z1 XZ1 Z2 XZ2 Z12];
 p = data.phat;
 
-X1 = X.*p;
-X0 = X.*(1-p);
+X1 = [ones(n,1) X].*p;
+X0 = [ones(n,1) X].*(1-p);
 Z21 = Z2.*p;
 Z20 = Z2.*(1-p);
 
@@ -34,30 +35,30 @@ Z20 = Z2.*(1-p);
 p2 = p.^2-p; % Second-order polynomial in propensity score
 W = [X0 Z20 X1 Z21 p2];
 theta = (W'*W)\(W'*Y);
-beta0 = theta(1:23);
-beta1 = theta(24:46);
-alpha2 = theta(47);
+beta0 = theta(1:26);
+beta1 = theta(27:52);
+alpha2 = theta(53);
 
 % Calculate propensity scores after manipulation
 % Case 1: alpha=2.5 (median tuition fee)
 M1 = (Z1-2.5).*(Z1>=2.5);
-XM1 = X(:,2:end).*M1;
+XM1 = X.*M1;
 M1Z2 = M1.*Z2;
 ZM1 = [M1 XM1 Z2 XZ2 M1Z2];
-p_M1 = predictp(X,ZM1,gamma);
+p_M1 = predictp([ones(n,1) X],ZM1,gamma);
 p2_M1 = p_M1.^2-p_M1;
 
 % Case 2: alpha=22.25 (maximum tuition fee)
 M2 = (Z1-22.25).*(Z1>=22.25);
-XM2 = X(:,2:end).*M2;
+XM2 = X.*M2;
 M2Z2 = M2.*Z2;
 ZM2 = [M2 XM2 Z2 XZ2 M2Z2];
-p_M2 = predictp(X,ZM2,gamma);
+p_M2 = predictp([ones(n,1) X],ZM2,gamma);
 p2_M2 = p_M2.^2-p_M2;
 
 % Calculate operator kernel in social welfare criterion
-g_M1 = [X Z2]*(beta1-beta0).*(p_M1-p)+(p2_M1-p2)*alpha2;
-g_M2 = [X Z2]*(beta1-beta0).*(p_M2-p)+(p2_M2-p2)*alpha2;
+g_M1 = [ones(n,1) X Z2]*(beta1-beta0).*(p_M1-p)+(p2_M1-p2)*alpha2;
+g_M2 = [ones(n,1) X Z2]*(beta1-beta0).*(p_M2-p)+(p2_M2-p2)*alpha2;
 
 % Calculate budget functions
 B_M1 = (Z1-M1).*p_M1;
@@ -126,7 +127,7 @@ Aineq = [[-V diag(C)]; [V -diag(C)]];
 bineq = [[C-minmargin];[-minmargin]];
 Aineq_M1 = [[-V diag(C)]; [V -diag(C)]; [zeros(1,k) B_M1']];
 Aineq_M2 = [[-V diag(C)]; [V -diag(C)]; [zeros(1,k) B_M2']];
-bineq_bc = [[C-minmargin];[-minmargin];0.32*n];
+bineq_bc = [[C-minmargin];[-minmargin];0.28*n];
 lb = [-B*ones(k,1); zeros(n,1)];
 ub = [ B*ones(k,1);  ones(n,1)];
 
