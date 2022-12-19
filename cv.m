@@ -20,11 +20,10 @@ X = [data.ar09 data.ar09.^2 data.rural data.dist_health ...
     data.n_sumatra data.w_sumatra data.s_sumatra data.lampung ...
     data.c_java data.yogyakarta data.e_java data.bali ...
     data.w_nussa_tengara data.s_kalimanthan data.s_sulawesi];
-X = [ones(n,1) X];
 p = data.phat;
 
-X1 = X.*p;
-X0 = X.*(1-p);
+X1 = [ones(n,1) X].*p;
+X0 = [ones(n,1) X].*(1-p);
 Z21 = Z2.*p;
 Z20 = Z2.*(1-p);
 

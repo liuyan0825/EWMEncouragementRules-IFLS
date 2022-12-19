@@ -23,7 +23,6 @@ X = [data.ar09 data.ar09.^2 data.rural data.dist_health ...
     data.w_nussa_tengara data.s_kalimanthan data.s_sulawesi];
 XZ1 = X.*Z1;
 XZ2 = X.*Z2;
-Z = [Z1 XZ1 Z2 XZ2 Z12];
 p = data.phat;
 
 X1 = [ones(n,1) X].*p;

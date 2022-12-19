@@ -105,7 +105,6 @@ scatter(dist_sec_u,exp_u,nw*0.4,'MarkerEdgeColor','none','MarkerFaceColor','blac
 
 subplot(1,2,2)
 [C2,h2] = contour(Z2all,Z1all,TE,'LineWidth',1);
-h2.LevelStep = 1;
 hold on
 title('Panel B: Treatment Effects')
 xlabel('Distance to School (in km)')

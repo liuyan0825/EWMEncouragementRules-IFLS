@@ -115,7 +115,7 @@ merge m:1 hhid00 using bk_sc.dta, keep(match) nogen
 	
 * generate indicator of rural residence 
 	gen rural = 0
-replace rural = 1 if sc05 == 2
+    replace rural = 1 if sc05 == 2
 
 * generate dummies for province
     gen n_sumatra = 0
@@ -208,6 +208,7 @@ merge m:1 pidlink using b3a_dl1.dta, keep(match) nogen
     replace edu = edu+3 if dl07 == 7 & (dl06 == 3 | dl06 == 4 | dl06 ==  73 | dl06 == 5 | dl06 == 6 | dl06 ==  74)
     replace edu = edu+4 if dl07 == 7 & (dl06 == 60 | dl06 == 61)
     replace edu = edu+2 if dl07 == 7 & dl06 == 62
+	
 * generate indicator of attendance of upper secondary school or higher
     gen upsec = 0
     replace upsec = 1 if edu>=10

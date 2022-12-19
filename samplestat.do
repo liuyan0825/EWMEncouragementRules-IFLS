@@ -6,7 +6,7 @@ import delimited IFLS2000_main.csv, clear
 * Years of education 
 * Distance to school (km)
 * Distance to health post (km)
-* Fees per continuiing student (rupiah)
+* Fees per continuing student (rupiah)
 * Age
 summarize lwages edu dist_sec dist_health exp ar09 if edu >= 10
 * Religion Protestant
@@ -30,7 +30,7 @@ summarize une_m ele_m sec_m missing_m  if edu >= 10
 * South Sumatra
 * Lampung
 * Jakarta
-* Centarl Java
+* Central Java
 * Yogyakarta
 * East Java
 * Bali
@@ -46,7 +46,7 @@ summarize rural n_sumatra w_sumatra s_sumatra lampung jakarta c_java yogyakarta 
 * Years of education 
 * Distance to school (km)
 * Distance to health post (km)
-* Fees per continuiing student (rupiah)
+* Fees per continuing student (rupiah)
 * Age
 summarize lwages edu dist_sec dist_health exp ar09 if edu < 10
 * Religion Protestant
@@ -70,7 +70,7 @@ summarize une_m ele_m sec_m missing_m  if edu < 10
 * South Sumatra
 * Lampung
 * Jakarta
-* Centarl Java
+* Central Java
 * Yogyakarta
 * East Java
 * Bali
