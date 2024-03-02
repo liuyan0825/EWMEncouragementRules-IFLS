@@ -50,20 +50,20 @@ This code calculates sample averages for the main variables used in the analysis
 
 **MATLAB Code: propensity.m**
 
-This code estimates the propensity score p(X,Z) and trims observations for p(X,Z) to have common support for treated and untreated. The coefficients from the logistic regression are saved in "propensity_coefs.mat". The trimmed data is saved in "IFLS2000_main_trim.mat".
+This code estimates the propensity score p(X,Z). The coefficients from the logistic regression are saved in “propensity_coefs.mat”. The data containing the estimated propensity scores is saved in “IFLS2000_main.mat”.
+
+**MATLAB Code: ddr.m**
+
+This code estimates the coefficients in the partially linear model for E[Y|X,Z2,p(X,Z)] using the double residual regression procedure of [Robinson (1988)](https://www.jstor.org/stable/1912705). The estimated coefficients are saved in “ddr_coefs.mat”.
 
 **MATLAB Code: EWM.m**
 
-This code calculates the feasible EWM encouragement rule and the budget-constrained EWM encouragement rule for two tuition subsidy levels (median and maximum tuition fee) and replicate Figure 1 and Table 1. The optimization problem is solved with [IBM ILOG CPLEX Optimization Studio](https://www.ibm.com/products/ilog-cplex-optimization-studio). Part of the codes are adapted from [replication files](https://www.econometricsociety.org/publications/econometrica/2018/03/01/who-should-be-treated-empirical-welfare-maximization-methods/supp/13288_Data_and_Programs.zip) for [Kitagawa and Tetenov (2018)](https://onlinelibrary.wiley.com/doi/abs/10.3982/ECTA13288).
+This code calculates the feasible EWM encouragement rule and the budget-constrained EWM encouragement rule for two tuition subsidy levels (median and maximum tuition fee) and replicates Figure 1 and Table 1. The optimization problem is solved with [IBM ILOG CPLEX Optimization Studio](https://www.ibm.com/products/ilog-cplex-optimization-studio). Part of the codes are adapted from [replication files](https://www.econometricsociety.org/publications/econometrica/2018/03/01/who-should-be-treated-empirical-welfare-maximization-methods/supp/13288_Data_and_Programs.zip) for [Kitagawa and Tetenov (2018)](https://onlinelibrary.wiley.com/doi/abs/10.3982/ECTA13288).
 
 **MATLAB Code: decomposition.m**
 
-This code plots the level sets of changes in average treatment take-up and average treatment effects for those induced to switch treatment status conditional on (Z1,Z2) when going from the status quo to a full tuition waiver (Figure 2). Function [contourLegend.m](https://www.mathworks.com/matlabcentral/fileexchange/115120-legend-for-contour-plots) is required.
+This code plots the level sets of changes in treatment take-up and PRTE when going from the status quo to a full tuition waiver for individuals with different values of (Z1,Z2) and the median value of X (Figure 2). Function [contourLegend.m](https://www.mathworks.com/matlabcentral/fileexchange/115120-legend-for-contour-plots) is required.
 
-**MATLAB Code: specification.m**
+**MATLAB Code: hcv.m**
 
-This code compares the polynomial and local quadratic specifications for the MTE.
-
-**MATLAB Code: cv.m**
-
-This code selects the order for the polynomial specification using leave-one-out cross-validation.
+This code selects the bandwidth using leave-one-out cross-validation.
